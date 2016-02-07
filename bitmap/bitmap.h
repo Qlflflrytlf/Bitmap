@@ -29,6 +29,12 @@ struct BITMAPBANDARRAY
 	DWORD height;
 };
 
+struct AREA
+{
+	POINT start;
+	POINT end;
+};
+
 #define HEADER_FULL_SIZE sizeof(BITMAPINFOHEADER)-sizeof(RGBQUAD)-sizeof(BITMAPFILEHEADER)
 #define NOZZLE_NUMBER 300
 #define PASS_NUMBER 2

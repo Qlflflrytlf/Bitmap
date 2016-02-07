@@ -269,3 +269,11 @@ _Pvt_Extensions
 *.exe
 *.out
 *.app
+bitmap/Temp.bmp
+bitmap/temp0.bmp
+bitmap/temp1.bmp
+bitmap/temp2.bmp
+bitmap/temp3.bmp
+bitmap/temp4.bmp
+bitmap/temp5.bmp
+bitmap/temp6.bmp
