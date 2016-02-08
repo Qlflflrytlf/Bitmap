@@ -5,40 +5,31 @@
 
 #pragma warning(disable:4996)
 
-struct BITMAPDUMMY
+typedef struct _BITMAPDUMMY
 {
 	BYTE* dummyMemory;
 	DWORD dummyLength;	
-};
+}BITMAPDUMMY;
 
 
-struct BITMAPFILE
+typedef struct _BITMAPFILE
 {
 	BITMAPFILEHEADER* header;
 	BITMAPINFOHEADER* info;
 	RGBQUAD* rgb;
 	BITMAPDUMMY* dummy;
 	BYTE* data;
-};
+}BITMAPFILE;
 
-struct BITMAPBANDARRAY
-{
-	BYTE* evenData;
-	BYTE* oddData;
-	DWORD width;
-	DWORD height;
-};
-
-struct AREA
+typedef struct _AREA
 {
 	POINT start;
 	POINT end;
-};
+}AREA;
 
 #define HEADER_FULL_SIZE sizeof(BITMAPINFOHEADER)-sizeof(RGBQUAD)-sizeof(BITMAPFILEHEADER)
 #define NOZZLE_NUMBER 300
 #define PASS_NUMBER 2
-
 
 void bitmapInfo(BITMAPFILE* bitmap);
 void bitmapMemoryFree(BITMAPFILE* bitmap);
