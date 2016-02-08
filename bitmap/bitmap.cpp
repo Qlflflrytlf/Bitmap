@@ -1,7 +1,5 @@
 #include "bitmap.h"
-#include <string>
 
-using namespace std;
 
 BITMAPFILE* bitmapRead(char* file)
 {
@@ -18,7 +16,7 @@ BITMAPFILE* bitmapRead(char* file)
 	memset(bitmap->header, 0, sizeof(BITMAPFILEHEADER));
 	memset(bitmap->info, 0, sizeof(BITMAPINFOHEADER));
 	memset(bitmap->rgb, 0, sizeof(RGBQUAD));
-	memset(bitmap->dummy, 0, sizeof(RGBQUAD));
+	memset(bitmap->dummy, 0, sizeof(BITMAPDUMMY));
 
 	fp = fopen(file, "rb+");
 
@@ -113,16 +111,17 @@ void bitmapHeaderCopy(BITMAPFILE* src, BITMAPFILE* dest)	// BITMAPFILE의 모든 헤
 
 }
 
-void bitmapVerticalCopy(BITMAPFILE* src, BITMAPFILE* dest)
+void bitmapVerticalCopy(BITMAPFILE* src, BITMAPFILE** dest)
 {
+	*dest = bitmapMemoryAlloc();
+	bitmapHeaderCopy(src, *dest);
 
-
-	dest->data = (BYTE*)malloc(src->info->biSizeImage);
+	(*dest)->data = (BYTE*)malloc(src->info->biSizeImage);
 
 	int xByteNumber = src->info->biWidth*(src->info->biBitCount) / 8;		// bitmap count를 이용한 한 줄 x데이터 Byte 용량 계산
-																		// Width * BitCount / 8
+																			// Width * BitCount / 8
 	int restByte = 0;
-	int yDotNumber = src->info->biHeight;								// y데이터를 찍을 횟수, 즉 y축의   dot 수
+	int yDotNumber = src->info->biHeight;									// y데이터를 찍을 횟수, 즉 y축의   dot 수
 	int count = 0;
 
 	printf("before xByteNumber = %d\n", xByteNumber);
@@ -142,12 +141,12 @@ void bitmapVerticalCopy(BITMAPFILE* src, BITMAPFILE* dest)
 	{
 		for (int j = 0; j < xByteNumber; j++)
 		{
-			dest->data[count] = src->data[i * xByteNumber + j];
+			(*dest)->data[count] = src->data[i * xByteNumber + j];
 			count++;
 		}
 	}
 
-	printf("memory vertical copy complete. \n\n");;
+//	printf("memory vertical copy complete. \n");;
 
 	return;
 }
@@ -166,23 +165,17 @@ void bitmapFileOut(BITMAPFILE* bitmap, char* file)
 	fclose(fp);
 }
 
-void bitmapTwoPass(BITMAPFILE* bitmap)
+void bitmapTwoPass(BITMAPFILE* bitmap) // 1bit bitmap two pass division
 {
 	char* temp = "temp";
 	char* num = (char*)malloc(30);
 	char* bmp = ".bmp";
 	char* fileName = (char*)malloc(30);
 	FILE* fp;
-	//string temp ="temp";
-	//string bmp = ".bmp";
-	//string fileName;
 	
 	BITMAPINFOHEADER info;
 	memcpy(&info, bitmap->info, sizeof(BITMAPINFOHEADER));
 	info.biHeight = NOZZLE_NUMBER;
-
-	//bitmapFileOut(bitmap,"temp.bmp");
-
 
 	int xByteNumber = bitmap->info->biWidth*(bitmap->info->biBitCount) / 8;
 	int restByte = 0;
@@ -302,17 +295,15 @@ void bitmapTwoPass(BITMAPFILE* bitmap)
 		if (origin.end.y < area.start.y)
 			break;
 
-		/*
-			전면 마이너스 영역 (데이터 영역 밖을 0으로 초기화 한다.)
-		*/
+		/*		전면 마이너스 영역 (데이터 영역 밖을 0으로 초기화 한다.)	*/
 		
 		scanData = (BYTE*)malloc(NOZZLE_NUMBER*xByteNumber);	// one band data
 		count = 0;
 		frontDummyCount = (origin.start.y - area.start.y) * xByteNumber;
 		backDummyCount = (area.end.y - origin.end.y) *xByteNumber;
 
-		printf("front Dummy Count: %d\n",frontDummyCount);
-		printf("back Dummy Count: %d\n",backDummyCount);
+//		printf("front Dummy Count: %d\n",frontDummyCount);
+//		printf("back Dummy Count: %d\n",backDummyCount);
 
 		for (int i = 0; i < frontDummyCount; i++)
 		{
@@ -321,13 +312,11 @@ void bitmapTwoPass(BITMAPFILE* bitmap)
 		}
 
 
-		/*
-			데이터 영역
-		*/
+		/*		데이터 영역		*/
 
 		if (frontDummyCount > 0 && backDummyCount > 0) // 전후 더미데이터가 있을경우
 		{
-			printf("전후 더미데이터가 있을 경우\n");
+//			printf("전후 더미데이터가 있을 경우\n");
 			copy.start.x = origin.start.x;
 			copy.start.y = origin.start.y;
 			copy.end.x = origin.end.x;
@@ -335,7 +324,7 @@ void bitmapTwoPass(BITMAPFILE* bitmap)
 		}
 		else if (frontDummyCount > 0)   // 전면 더미가 있을 경우
 		{
-			printf("전면 더미가 있을 경우\n");
+//			printf("전면 더미가 있을 경우\n");
 			copy.start.x = origin.start.x;
 			copy.start.y = origin.start.y;
 			copy.end.x = area.end.x;
@@ -344,7 +333,7 @@ void bitmapTwoPass(BITMAPFILE* bitmap)
 		}
 		else if (backDummyCount > 0)	//후면 더미가 있을 경우
 		{
-			printf("후면 더미가 있을 경우\n");
+//			printf("후면 더미가 있을 경우\n");
 			copy.start.x = area.start.x;
 			copy.start.y = area.start.y;
 			copy.end.x = origin.end.x;
@@ -353,19 +342,19 @@ void bitmapTwoPass(BITMAPFILE* bitmap)
 		}
 		else
 		{
-			printf("더미가 없을 경우\n");
+//			printf("더미가 없을 경우\n");
 			copy.start.x = area.start.x;
 			copy.start.y = area.start.y;
 			copy.end.x = area.end.x;
 			copy.end.y = area.end.y;
 		}
 
-		if (bandCount % 2)
-			printf("%d번 홀수데이터!\n",bandCount);
-		else
-			printf("%d번 짝수데이터!\n", bandCount);
+//		if (bandCount % 2)
+//			printf("%d번 홀수데이터!\n",bandCount);
+//		else
+//			printf("%d번 짝수데이터!\n", bandCount);
 
-		printf("(%d,%d) ~ (%d,%d) 데이터 카피 예정 \n\n",copy.start.x,copy.start.y,copy.end.x,copy.end.y);
+//		printf("(%d,%d) ~ (%d,%d) 데이터 카피 예정 \n\n",copy.start.x,copy.start.y,copy.end.x,copy.end.y);
 
 
 		for (int i = copy.start.y; i < copy.end.y; i++)
@@ -374,12 +363,12 @@ void bitmapTwoPass(BITMAPFILE* bitmap)
 			{
 				if (!(bandCount % 2))	//짝수
 				{
-					scanData[count] = ((bitmap->data)[i*xByteNumber + j]) & (BYTE)0x55  ;
+					scanData[count] = ((bitmap->data)[i*xByteNumber + j]) & (BYTE)0x55;	//01010101
 					//printf("%x\n",scanData[count]);
 				}
 				if (bandCount % 2)	   // 홀수
 				{
-					scanData[count] = ((bitmap->data)[i*xByteNumber + j]) & (BYTE)0xAA;
+					scanData[count] = ((bitmap->data)[i*xByteNumber + j]) & (BYTE)0xAA;	//10101010
 					//printf("%x\n", scanData[count]);
 				}
 				count++;
@@ -388,9 +377,7 @@ void bitmapTwoPass(BITMAPFILE* bitmap)
 		}
 
 
-		/*
-			후면 마이너스 영역 (데이터 영역 밖을 0으로 초기화 한다.)
-		*/
+		/*		후면 마이너스 영역 (데이터 영역 밖을 0으로 초기화 한다.)		*/
 
 		for (int i = 0; i < backDummyCount; i++)
 		{
@@ -419,6 +406,8 @@ void bitmapTwoPass(BITMAPFILE* bitmap)
 		bandCount++;
 
 	}
-
+	free(num);
+	free(fileName);
+//	printf("Two pass division complete \n ");
 	return;
 }

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <Windows.h>
 #include <wingdi.h>
-#include <string>
+#include <string.h>
 
 #pragma warning(disable:4996)
 
@@ -47,6 +47,6 @@ BITMAPFILE* bitmapRead(char* file);
 BITMAPFILE* bitmapMemoryAlloc();
 
 void bitmapHeaderCopy(BITMAPFILE* src,BITMAPFILE* dest);
-void bitmapVerticalCopy(BITMAPFILE* src,BITMAPFILE* dest);
+void bitmapVerticalCopy(BITMAPFILE* src,BITMAPFILE** dest);
 void bitmapFileOut(BITMAPFILE* bitmap,char* file);
 void bitmapTwoPass(BITMAPFILE* bitmap);

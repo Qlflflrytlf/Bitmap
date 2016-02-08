@@ -1,37 +1,32 @@
 #include "bitmap.h"
-#include <iostream>
-#include <string>
-
-using namespace std;
 
 
+#define DEBUG
 int main(int argc, char *argv[])
 {
-
-
-	string str = string(argv[0]);
-	cout << str << endl << endl;
-
-
 	BITMAPFILE* bitmap;
-	bitmap = bitmapRead("Penguins_1bit_another_res.bmp");
-	bitmapInfo(bitmap);
-	
 	BITMAPFILE* bitmapCopy;
 
-	bitmapCopy = bitmapMemoryAlloc();		// 구조체의 메모리만 할당한다
-	
-	bitmapHeaderCopy(bitmap,bitmapCopy);	// bitmap의 헤더와 dummy의 동적 메모리를 복사한다.
-	bitmapVerticalCopy(bitmap,bitmapCopy);  // bitmap의 픽셀데이터를 상하반전 시켜서 복사한다.
+#ifdef  DEBUG
 
-	bitmapFileOut(bitmapCopy,"temp.bmp"); //정상작동함.
+	bitmap = bitmapRead("Penguins_1bit_another_res.bmp");
 
-	bitmapTwoPass(bitmapCopy);
+#else
 
-	bitmapMemoryFree(bitmap);
-	bitmapMemoryFree(bitmapCopy);
+	if (argc != 2)exit(0);
+	bitmap = bitmapRead(argv[1]);
 
-	printf("\n");
+#endif
+
+	bitmapInfo(bitmap);							// bitmap 정보 콘솔출력	
+	bitmapVerticalCopy(bitmap,&bitmapCopy);		// bitmap 상하반전 처리 
+
+	bitmapFileOut(bitmapCopy,"temp.bmp");		// bitmap 파일 쓰기
+	bitmapTwoPass(bitmapCopy);					// two pass 파일 생성
+
+	bitmapMemoryFree(bitmap);					// 메모리 해제
+	bitmapMemoryFree(bitmapCopy);				// 메모리 해제
+
 	return 0;
 
 }
